@@ -1,0 +1,107 @@
+# source/physics/Hydro/HydroMain/split/DGFV
+
+REQUIRES Driver/DriverMain/Split
+REQUIRES physics/Eos
+
+# Number of guard cells
+GUARDCELLS 4
+
+# See README.txt for an explanation.
+PARAMETER dgfv_characteristic_time          REAL    1.0
+PARAMETER dgfv_characteristic_density       REAL    1.0
+PARAMETER dgfv_characteristic_dimension     REAL    1.0
+
+# See README.txt for an explanation.
+PARAMETER dgfv_fv_active            BOOLEAN    TRUE
+PARAMETER dgfv_dg_active            BOOLEAN    TRUE
+
+# Timestepping method: EULER, RALSTON, SSP_22, SSP_33, SSP_34, SSP_45, LOW_STORAGE_45
+PARAMETER dgfv_runge_kutta          STRING  "SSP_34"
+
+# Positivity enforcing limiter.
+PARAMETER dgfv_enforce_positivity   BOOLEAN    TRUE
+
+# Hyperbolic divergence cleaning.
+PARAMETER dgfv_mhd_div_cleaning     BOOLEAN    TRUE
+
+# Non-conservative terms: Powell + GLM
+PARAMETER dgfv_mhd_non_cons         BOOLEAN    TRUE
+
+# Enforce 100% FV in blocks touching domain boundaries.
+# Suppresses instabilities at boundaries in some cases.
+PARAMETER dgfv_fv_at_boundary       BOOLEAN     FALSE
+
+# Might be useful in some cases.
+PARAMETER hy_limit_abundance        BOOLEAN    FALSE
+
+# ---------- #
+
+# Variables required by the DGFV module
+VARIABLE dens TYPE: PER_VOLUME EOSMAP: DENS # density
+VARIABLE velx TYPE: PER_MASS   EOSMAPIN:VELX # x-velocity
+VARIABLE vely TYPE: PER_MASS   EOSMAPIN:VELY # y-velocity
+VARIABLE velz TYPE: PER_MASS   EOSMAPIN:VELZ # z-velocity
+VARIABLE pres                  EOSMAP: PRES # pressure
+VARIABLE ener TYPE: PER_MASS   EOSMAP: ENER # specific total energy (T+U)
+VARIABLE gamc                  EOSMAP: GAMC # sound-speed gamma
+VARIABLE magx TYPE: PER_VOLUME # x-magnetic field
+VARIABLE magy TYPE: PER_VOLUME # y-magnetic field
+VARIABLE magz TYPE: PER_VOLUME # z-magnetic field
+VARIABLE temp                  EOSMAP: TEMP # temperature
+VARIABLE eint TYPE: PER_MASS   EOSMAP: EINT # specific internal energy (U)
+VARIABLE glmp TYPE: PER_VOLUME # GLM correction field Psi
+
+# Flux
+FLUX dens
+FLUX xmom
+FLUX ymom
+FLUX zmom
+FLUX magx
+FLUX magy
+FLUX magz
+FLUX ener
+FLUX glmp
+
+# ---------- #
+
+# Variables for debugging.
+VARIABLE blnd                  # blending factor
+#VARIABLE divb                  # divergence of B
+VARIABLE erhs                  # entropy production
+#VARIABLE accx
+#VARIABLE accy
+#VARIABLE accz
+#VARIABLE dtmn
+
+# The following variable is not used by the solver and can be removed
+# We only keep it for compatibility reasons with some Simulation setups
+# provided in the FLASH code, it can be removed at any time
+VARIABLE magp  # magnetic pressure
+
+# ---------- #
+
+USESETUPVARS ParameshLibraryMode, Grid
+# Link in this file only if Paramesh LIBRARY mode or PM4DEV is requested
+IF ParameshLibraryMode or (Grid in ["","PM4DEV"])
+	DATAFILES amr_runtime_parameters.tpl
+ENDIF
+
+# Signal that a 2-dim problem really means a 2.5-dim problem
+PPDEFINE	FLASH_2P5DIM
+
+# Signal that we are using DGFV.
+PPDEFINE	HYDRO_DGFV
+
+# Experimental features.
+PARAMETER dgfv_node_type                    STRING     "GAUSS"
+PARAMETER dgfv_flux_differencing            BOOLEAN    FALSE
+PARAMETER dgfv_entropy_correction           BOOLEAN    FALSE
+PARAMETER dgfv_entropy_correction_active    BOOLEAN    TRUE
+PARAMETER dgfv_entropy_correction_cutoff    BOOLEAN    TRUE
+PARAMETER dgfv_entropy_boundary_projection  BOOLEAN    FALSE
+
+# Ignored.
+PARAMETER killdivb     BOOLEAN    FALSE
+PARAMETER irenorm      INTEGER    0          # Renormalize abundances
+PARAMETER chscaling    REAL       1.0
+PARAMETER hy_write_integral_quantities  BOOLEAN    FALSE
